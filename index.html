@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Vigilabebé</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  section{min-height:100%;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;max-width:720px;margin:0 auto}
+  [hidden]{display:none!important}
+  h1{margin:8px 0 0;font-size:1.6rem}
+  p{margin:0;color:var(--mut)}
+  button,.btn{appearance:none;border:0;border-radius:12px;padding:14px 16px;font:inherit;font-weight:600;background:var(--card);color:var(--txt);cursor:pointer}
+  button.big{padding:22px 16px;font-size:1.15rem;text-align:left}
+  button.big small{display:block;font-weight:400;color:var(--mut);margin-top:4px}
+  button.pri{background:var(--acc);color:#0b1220}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row>*{flex:1 1 auto}
+  input{font:inherit;padding:14px;border-radius:12px;border:1px solid #334155;background:#0b1220;color:var(--txt);width:100%;text-transform:uppercase;letter-spacing:.15em}
+  input[type=range]{padding:0;letter-spacing:0}
+  .card{background:var(--card);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .code{font-size:2rem;font-weight:800;letter-spacing:.2em;text-align:center;color:var(--acc)}
+  video{width:100%;background:#000;border-radius:14px;aspect-ratio:16/9;object-fit:contain}
+  #remoteVideo{flex:1;min-height:40vh}
+  .status{padding:10px 12px;border-radius:10px;background:var(--card);font-weight:600}
+  .status::before{content:"●  "}
+  .status.ok::before{color:var(--ok)} .status.warn::before{color:var(--warn)} .status.err::before{color:var(--err)}
+  .meter{height:14px;background:#0b1220;border-radius:7px;overflow:hidden;position:relative}
+  .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ok),var(--warn),var(--err));transition:width .15s}
+  .meter b{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+  .alarm{animation:flash .5s 4}
+  @keyframes flash{50%{box-shadow:0 0 0 6px var(--err) inset;background:#450a0a}}
+  #dim{position:fixed;inset:0;background:#000;z-index:10;display:flex;align-items:flex-end;justify-content:center;padding:24px;color:#333;font-size:.9rem}
+  label{display:flex;align-items:center;gap:8px;color:var(--mut)}
+</style>
+</head>
+<body>
+
+<!-- INICIO -->
+<section id="home">
+  <h1>👶 Vigilabebé</h1>
+  <p>Usa dos móviles: uno se queda junto al bebé como cámara y el otro lo usas tú para mirar.</p>
+  <button class="big pri" id="btnCam">📷 Este móvil es la CÁMARA<small>Ponlo junto al bebé y enchúfalo al cargador</small></button>
+  <button class="big" id="btnView">👀 VER AL BEBÉ<small>Desde tu móvil, estés donde estés</small></button>
+</section>
+
+<!-- CÁMARA -->
+<section id="cam" hidden>
+  <div class="status warn" id="camStatus">Iniciando cámara…</div>
+  <video id="camVideo" autoplay playsinline muted></video>
+  <div class="row">
+    <button id="btnFlip">🔁 Cambiar cámara</button>
+    <button id="btnDim">🌙 Oscurecer pantalla</button>
+  </div>
+  <p id="viewersInfo">Monitores conectados: 0</p>
+  <button id="btnCamBack">← Salir</button>
+</section>
+
+<!-- MONITOR -->
+<section id="view" hidden>
+  <div class="status warn" id="viewStatus">Conectando…</div>
+  <video id="remoteVideo" autoplay playsinline muted></video>
+  <button class="pri" id="btnSound">🔊 Activar sonido</button>
+  <div class="card" id="soundCard" hidden>
+    <div class="meter"><i id="meterBar"></i><b id="meterMark"></b></div>
+    <label><input type="checkbox" id="noiseAlert" checked style="width:auto"> Avisar (vibración y destello) si hay ruido</label>
+    <label>Sensibilidad <input type="range" id="threshold" min="10" max="95" value="60"></label>
+  </div>
+  <div class="row">
+    <button id="btnFull">⛶ Pantalla completa</button>
+    <button id="btnViewBack">← Salir</button>
+  </div>
+</section>
+
+<div id="dim" hidden>Toca para volver a encender</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const PREFIX = 'vigilabebe-v1-';
+const ROOM = 'K7QM4XRP2D'; // código fijo: cámara y monitor se encuentran solos
+const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} }
+};
+function newCode(){
+  let s = '';
+  for (const b of crypto.getRandomValues(new Uint8Array(8))) s += ALPHA[b % ALPHA.length];
+  return s;
+}
+function show(id){ for (const s of ['home','cam','view']) $('#'+s).hidden = s !== id; }
+function setStatus(el, text, cls){ el.textContent = text; el.className = 'status ' + cls; }
+const goHome = () => { location.href = location.pathname; };
+
+// Mantener la pantalla encendida
+let activeMode = null;
+async function keepAwake(){
+  try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && activeMode) keepAwake();
+});
+
+/* ===================== MODO CÁMARA ===================== */
+let camPeer, localStream, camRetry;
+let facing = store.get('facing') || 'user';
+const calls = new Map();
+const camStatus = (t,c) => setStatus($('#camStatus'), t, c);
+
+async function startCamera(){
+  activeMode = 'cam'; show('cam'); keepAwake();
+  const code = ROOM;
+  try { await getMedia(); }
+  catch (e) { camStatus('No se pudo acceder a la cámara/micrófono: ' + e.message, 'err'); return; }
+  connectCamPeer(code);
+}
+
+async function getMedia(){
+  const s = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } },
+    audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true }
+  });
+  if (localStream) {
+    // Sustituir pistas en las llamadas activas sin cortar la conexión
+    for (const call of calls.values()) {
+      for (const sender of call.peerConnection?.getSenders() || []) {
+        const t = sender.track && s.getTracks().find(x => x.kind === sender.track.kind);
+        if (t) sender.replaceTrack(t);
+      }
+    }
+    localStream.getTracks().forEach(t => t.stop());
+  }
+  localStream = s;
+  $('#camVideo').srcObject = s;
+}
+
+function updateViewers(){
+  $('#viewersInfo').textContent = 'Monitores conectados: ' + calls.size;
+  if (camPeer?.open) camStatus(calls.size ? 'Emitiendo en directo' : 'Lista. Esperando al monitor…', 'ok');
+}
+
+function retryCam(code, msg, ms){
+  camStatus(msg, 'warn');
+  clearTimeout(camRetry);
+  try { camPeer?.destroy(); } catch {}
+  camRetry = setTimeout(() => connectCamPeer(code), ms);
+}
+
+function connectCamPeer(code){
+  const peer = camPeer = new Peer(PREFIX + code, { debug: 1 });
+  peer.on('open', updateViewers);
+  peer.on('connection', conn => {
+    conn.on('open', () => {
+      const call = peer.call(conn.peer, localStream);
+      calls.set(conn.peer, call); updateViewers();
+      const drop = () => {
+        if (calls.get(conn.peer) === call) { calls.delete(conn.peer); updateViewers(); }
+      };
+      call.on('close', drop); call.on('error', drop);
+      conn.on('close', () => { call.close(); drop(); });
+    });
+  });
+  peer.on('disconnected', () => {
+    if (peer.destroyed || peer !== camPeer) return;
+    camStatus('Reconectando con el servidor…', 'warn');
+    setTimeout(() => { if (!peer.destroyed && peer.disconnected) peer.reconnect(); }, 2000);
+  });
+  peer.on('error', err => {
+    if (peer !== camPeer) return;
+    if (err.type === 'unavailable-id') retryCam(code, 'Código ocupado (¿otra cámara abierta con este código?). Reintentando…', 5000);
+    else if (['network','server-error','socket-error','socket-closed'].includes(err.type)) retryCam(code, 'Sin conexión. Reintentando…', 4000);
+    else if (err.type !== 'peer-unavailable') camStatus('Error: ' + err.type, 'err');
+  });
+}
+
+$('#btnFlip').onclick = async () => {
+  facing = facing === 'user' ? 'environment' : 'user';
+  store.set('facing', facing);
+  try { await getMedia(); } catch (e) { camStatus('No se pudo cambiar de cámara: ' + e.message, 'err'); }
+};
+$('#btnDim').onclick = () => { $('#dim').hidden = false; };
+$('#dim').onclick = () => { $('#dim').hidden = true; };
+$('#btnCamBack').onclick = goHome;
+
+/* ===================== MODO MONITOR ===================== */
+let viewPeer, viewConn, viewCall, viewCode, retryTimer, remoteStream;
+let live = false, lostSince = 0, audioCtx, analyser, meterSrc;
+const viewStatus = (t,c) => setStatus($('#viewStatus'), t, c);
+
+function startViewer(code){
+  activeMode = 'view'; show('view'); keepAwake();
+  viewCode = code; store.set('viewCode', code);
+  history.replaceState(null, '', '?ver=' + code);
+  viewPeer = new Peer({ debug: 1 });
+  viewPeer.on('open', tryConnect);
+  viewPeer.on('call', call => {
+    if (viewCall && viewCall !== call) viewCall.close();
+    viewCall = call;
+    call.answer();
+    call.on('stream', s => {
+      remoteStream = s; live = true; lostSince = 0;
+      const v = $('#remoteVideo'); v.srcObject = s; v.play().catch(() => {});
+      viewStatus('En directo', 'ok');
+      startMeter();
+    });
+    call.on('close', () => lost(call));
+    call.on('error', () => lost(call));
+    const pc = call.peerConnection;
+    pc?.addEventListener('iceconnectionstatechange', () => {
+      const st = pc.iceConnectionState;
+      if (st === 'failed' || st === 'closed') lost(call);
+      else if (st === 'disconnected') setTimeout(() => {
+        if (pc.iceConnectionState === 'disconnected') lost(call);
+      }, 5000);
+    });
+  });
+  viewPeer.on('disconnected', () => {
+    setTimeout(() => { if (!viewPeer.destroyed && viewPeer.disconnected) viewPeer.reconnect(); }, 2000);
+  });
+  viewPeer.on('error', err => {
+    if (live) return;
+    viewStatus(err.type === 'peer-unavailable'
+      ? 'La cámara no está conectada. Reintentando…'
+      : 'Problema de conexión (' + err.type + '). Reintentando…', 'warn');
+    scheduleRetry(4000);
+  });
+}
+
+function scheduleRetry(ms){ clearTimeout(retryTimer); retryTimer = setTimeout(tryConnect, ms); }
+
+function tryConnect(){
+  clearTimeout(retryTimer);
+  if (!viewPeer || viewPeer.destroyed || live) return;
+  if (viewPeer.disconnected) { viewPeer.reconnect(); scheduleRetry(4000); return; }
+  if (!lostSince) viewStatus('Conectando con la cámara…', 'warn');
+  try { viewConn?.close(); } catch {}
+  viewConn = viewPeer.connect(PREFIX + viewCode, { reliable: true });
+  viewConn.on('close', () => { if (live) lost(viewCall); });
+  scheduleRetry(15000); // si en 15 s no llega vídeo, se reintenta
+}
+
+function lost(call){
+  if (call && call !== viewCall) return;
+  if (!live && lostSince) return;
+  live = false;
+  if (!lostSince) lostSince = Date.now();
+  try { viewCall?.close(); } catch {}
+  viewCall = null;
+  viewStatus('⚠️ Señal perdida. Reconectando…', 'err');
+  scheduleRetry(2000);
+}
+
+// Pitido de aviso si la señal lleva perdida más de 20 s
+setInterval(() => {
+  if (activeMode !== 'view' || live || !lostSince) return;
+  const secs = Math.round((Date.now() - lostSince) / 1000);
+  viewStatus('⚠️ Sin señal desde hace ' + secs + ' s. Reconectando…', 'err');
+  if (secs >= 20 && secs % 10 < 2) { beep(); navigator.vibrate?.([300,150,300]); }
+}, 2000);
+
+function beep(){
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.frequency.value = 880; g.gain.value = 0.2;
+  o.connect(g).connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + 0.4);
+}
+
+$('#btnSound').onclick = async () => {
+  const v = $('#remoteVideo');
+  v.muted = false; v.play().catch(() => {});
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  await audioCtx.resume();
+  $('#btnSound').hidden = true; $('#soundCard').hidden = false;
+  startMeter();
+};
+
+function startMeter(){
+  if (!audioCtx || !remoteStream || !remoteStream.getAudioTracks().length) return;
+  try { meterSrc?.disconnect(); } catch {}
+  meterSrc = audioCtx.createMediaStreamSource(remoteStream);
+  analyser = audioCtx.createAnalyser(); analyser.fftSize = 1024;
+  meterSrc.connect(analyser); // no se conecta a la salida: el audio ya suena por el vídeo
+}
+
+const thr = $('#threshold');
+thr.value = store.get('threshold') || 60;
+const updMark = () => { $('#meterMark').style.left = (100 - thr.value) + '%'; store.set('threshold', thr.value); };
+thr.oninput = updMark; updMark();
+$('#noiseAlert').checked = store.get('noiseAlert') !== '0';
+$('#noiseAlert').onchange = e => store.set('noiseAlert', e.target.checked ? '1' : '0');
+
+let loud = 0, lastAlarm = 0;
+const buf = new Float32Array(1024);
+setInterval(() => {
+  if (!analyser || !live) return;
+  analyser.getFloatTimeDomainData(buf);
+  let sum = 0; for (const x of buf) sum += x * x;
+  const db = 20 * Math.log10(Math.sqrt(sum / buf.length) || 1e-8);
+  const level = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
+  $('#meterBar').style.width = level + '%';
+  const limit = 100 - thr.value; // más sensibilidad = umbral más bajo
+  loud = level > limit ? loud + 1 : 0;
+  if (loud >= 3 && $('#noiseAlert').checked && Date.now() - lastAlarm > 5000) {
+    lastAlarm = Date.now();
+    navigator.vibrate?.([400,200,400]);
+    const s = $('#view'); s.classList.remove('alarm'); void s.offsetWidth; s.classList.add('alarm');
+  }
+}, 200);
+
+$('#btnFull').onclick = () => {
+  const v = $('#remoteVideo');
+  (v.requestFullscreen || v.webkitEnterFullscreen || v.webkitRequestFullscreen)?.call(v);
+};
+$('#btnViewBack').onclick = goHome;
+
+/* ===================== INICIO ===================== */
+if (!window.isSecureContext) {
+  $('#home').insertAdjacentHTML('beforeend',
+    '<div class="status err">Esta página debe abrirse con https:// para poder usar la cámara.</div>');
+}
+$('#btnCam').onclick = startCamera;
+$('#btnView').onclick = () => startViewer(ROOM);
+if (new URLSearchParams(location.search).has('ver')) startViewer(ROOM);
+</script>
+</body>
+</html>
