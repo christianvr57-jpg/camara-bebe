@@ -13,21 +13,29 @@
   [hidden]{display:none!important}
   h1{margin:8px 0 0;font-size:1.6rem}
   p{margin:0;color:var(--mut)}
-  button,.btn{appearance:none;border:0;border-radius:12px;padding:14px 16px;font:inherit;font-weight:600;background:var(--card);color:var(--txt);cursor:pointer}
+  button{appearance:none;border:0;border-radius:12px;padding:14px 16px;font:inherit;font-weight:600;background:var(--card);color:var(--txt);cursor:pointer}
   button.big{padding:22px 16px;font-size:1.15rem;text-align:left}
   button.big small{display:block;font-weight:400;color:var(--mut);margin-top:4px}
   button.pri{background:var(--acc);color:#0b1220}
   .row{display:flex;gap:8px;flex-wrap:wrap}
   .row>*{flex:1 1 auto}
-  input{font:inherit;padding:14px;border-radius:12px;border:1px solid #334155;background:#0b1220;color:var(--txt);width:100%;text-transform:uppercase;letter-spacing:.15em}
-  input[type=range]{padding:0;letter-spacing:0}
+  .lenses{display:flex;gap:6px}
+  .lenses button{flex:1;padding:12px 6px;border-radius:999px}
+  .lenses button.on{background:var(--acc);color:#0b1220}
   .card{background:var(--card);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
-  .code{font-size:2rem;font-weight:800;letter-spacing:.2em;text-align:center;color:var(--acc)}
-  video{width:100%;background:#000;border-radius:14px;aspect-ratio:16/9;object-fit:contain}
-  #remoteVideo{flex:1;min-height:40vh}
+  .vwrap{position:relative;overflow:hidden;border-radius:14px;background:#000;aspect-ratio:4/3}
+  #view .vwrap{flex:1;min-height:40vh;aspect-ratio:auto}
+  .vwrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:transform .3s}
+  .vwrap.zoom2 video{transform:scale(2)}
+  #noiseDot{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--err);box-shadow:0 0 0 4px rgba(239,68,68,.35);animation:pulse 1s infinite;z-index:2}
+  @keyframes pulse{50%{transform:scale(1.35);box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+  #noiseTag{position:absolute;top:10px;right:44px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:8px;font-size:.85rem;font-weight:700;z-index:2}
   .status{padding:10px 12px;border-radius:10px;background:var(--card);font-weight:600}
   .status::before{content:"●  "}
   .status.ok::before{color:var(--ok)} .status.warn::before{color:var(--warn)} .status.err::before{color:var(--err)}
+  .info{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.95rem}
+  .info span:nth-child(odd){color:var(--mut)}
+  .good{color:var(--ok)} .mid{color:var(--warn)} .bad{color:var(--err)}
   .meter{height:14px;background:#0b1220;border-radius:7px;overflow:hidden;position:relative}
   .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ok),var(--warn),var(--err));transition:width .15s}
   .meter b{position:absolute;top:0;bottom:0;width:2px;background:#fff}
@@ -35,6 +43,8 @@
   @keyframes flash{50%{box-shadow:0 0 0 6px var(--err) inset;background:#450a0a}}
   #dim{position:fixed;inset:0;background:#000;z-index:10;display:flex;align-items:flex-end;justify-content:center;padding:24px;color:#333;font-size:.9rem}
   label{display:flex;align-items:center;gap:8px;color:var(--mut)}
+  label input[type=checkbox]{width:20px;height:20px}
+  input[type=range]{flex:1}
 </style>
 </head>
 <body>
@@ -50,11 +60,9 @@
 <!-- CÁMARA -->
 <section id="cam" hidden>
   <div class="status warn" id="camStatus">Iniciando cámara…</div>
-  <video id="camVideo" autoplay playsinline muted></video>
-  <div class="row">
-    <button id="btnFlip">🔁 Cambiar cámara</button>
-    <button id="btnDim">🌙 Oscurecer pantalla</button>
-  </div>
+  <div class="vwrap" id="camWrap"><video id="camVideo" autoplay playsinline muted></video></div>
+  <div class="lenses" id="camLenses"></div>
+  <button id="btnDim">🌙 Oscurecer pantalla</button>
   <p id="viewersInfo">Monitores conectados: 0</p>
   <button id="btnCamBack">← Salir</button>
 </section>
@@ -62,12 +70,30 @@
 <!-- MONITOR -->
 <section id="view" hidden>
   <div class="status warn" id="viewStatus">Conectando…</div>
-  <video id="remoteVideo" autoplay playsinline muted></video>
-  <button class="pri" id="btnSound">🔊 Activar sonido</button>
+  <div class="vwrap" id="viewWrap">
+    <video id="remoteVideo" autoplay playsinline muted></video>
+    <div id="noiseDot" hidden></div><div id="noiseTag" hidden>RUIDO</div>
+  </div>
+  <div class="lenses" id="viewLenses"></div>
+  <button class="pri" id="btnSound">🔊 Activar sonido y avisos</button>
   <div class="card" id="soundCard" hidden>
     <div class="meter"><i id="meterBar"></i><b id="meterMark"></b></div>
-    <label><input type="checkbox" id="noiseAlert" checked style="width:auto"> Avisar (vibración y destello) si hay ruido</label>
     <label>Sensibilidad <input type="range" id="threshold" min="10" max="95" value="60"></label>
+    <div class="row">
+      <label><input type="checkbox" id="optBeep" checked> Pitido</label>
+      <label><input type="checkbox" id="optVibe" checked> Vibración</label>
+    </div>
+    <p id="lastNoise">Sin ruidos detectados</p>
+  </div>
+  <div class="card">
+    <div class="info">
+      <span>🔋 Batería</span><span id="iBat">—</span>
+      <span>📶 Red</span><span id="iNet">—</span>
+      <span>📡 Conexión</span><span id="iQual">—</span>
+      <span>⏱️ Retardo</span><span id="iRtt">—</span>
+      <span>🎞️ Vídeo</span><span id="iVid">—</span>
+      <span>🛰️ Ruta</span><span id="iRoute">—</span>
+    </div>
   </div>
   <div class="row">
     <button id="btnFull">⛶ Pantalla completa</button>
@@ -82,6 +108,7 @@
 const $ = s => document.querySelector(s);
 const PREFIX = 'vigilabebe-v1-';
 const ROOM = 'K7QM4XRP2D'; // código fijo: cámara y monitor se encuentran solos
+
 // Servidores STUN/TURN. El TURN (ExpressTURN) reenvía el vídeo cuando los móviles
 // no pueden conectarse directamente, p. ej. con datos móviles.
 const ICE_SERVERS = [
@@ -96,20 +123,16 @@ const ICE_SERVERS = [
     credential: 'qylI2+y6BMAtTcoCUc/YW89uVBM='
   }
 ];
-async function peerOptions(){ return { debug: 1, config: { iceServers: ICE_SERVERS } }; }
-const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const peerOptions = () => ({ debug: 1, config: { iceServers: ICE_SERVERS } });
+
 const store = {
   get(k){ try { return localStorage.getItem(k); } catch { return null; } },
   set(k,v){ try { localStorage.setItem(k,v); } catch {} }
 };
-function newCode(){
-  let s = '';
-  for (const b of crypto.getRandomValues(new Uint8Array(8))) s += ALPHA[b % ALPHA.length];
-  return s;
-}
 function show(id){ for (const s of ['home','cam','view']) $('#'+s).hidden = s !== id; }
 function setStatus(el, text, cls){ el.textContent = text; el.className = 'status ' + cls; }
 const goHome = () => { location.href = location.pathname; };
+const ago = ms => { const s = Math.round(ms/1000); return s < 60 ? `hace ${s} s` : `hace ${Math.round(s/60)} min`; };
 
 // Mantener la pantalla encendida
 let activeMode = null;
@@ -120,38 +143,109 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && activeMode) keepAwake();
 });
 
+function renderLenses(el, lenses, current, onPick){
+  el.innerHTML = '';
+  for (const l of lenses) {
+    const b = document.createElement('button');
+    b.textContent = l.label; b.className = l.id === current ? 'on' : '';
+    b.onclick = () => onPick(l.id);
+    el.appendChild(b);
+  }
+}
+
 /* ===================== MODO CÁMARA ===================== */
-let camPeer, localStream, camRetry;
-let facing = store.get('facing') || 'user';
-const calls = new Map();
+let camPeer, localStream, camRetry, lenses = [], devices = {}, digitalZoom = false;
+let lens = store.get('lens') || 'wide';
+const calls = new Map(), conns = new Map();
 const camStatus = (t,c) => setStatus($('#camStatus'), t, c);
 
 async function startCamera(){
   activeMode = 'cam'; show('cam'); keepAwake();
-  const code = ROOM;
-  try { await getMedia(); }
-  catch (e) { camStatus('No se pudo acceder a la cámara/micrófono: ' + e.message, 'err'); return; }
-  connectCamPeer(code);
+  try {
+    await getMedia(lens).catch(() => getMedia(lens = 'wide'));
+    await detectLenses();
+    // La primera vez aún no se conocían las lentes: abrir la guardada de verdad
+    if (lens !== 'wide' && lens !== 'front') await getMedia(lens).catch(() => getMedia(lens = 'wide'));
+    showCamLenses();
+  } catch (e) { camStatus('No se pudo acceder a la cámara/micrófono: ' + e.message, 'err'); return; }
+  connectCamPeer(ROOM);
+  setInterval(sendStatus, 3000);
 }
 
-async function getMedia(){
-  const s = await navigator.mediaDevices.getUserMedia({
-    // Resolución moderada para que vaya fluido con datos móviles
-    video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15 } },
-    audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true }
-  });
-  if (localStream) {
-    // Sustituir pistas en las llamadas activas sin cortar la conexión
-    for (const call of calls.values()) {
-      for (const sender of call.peerConnection?.getSenders() || []) {
-        const t = sender.track && s.getTracks().find(x => x.kind === sender.track.kind);
-        if (t) sender.replaceTrack(t);
-      }
-    }
-    localStream.getTracks().forEach(t => t.stop());
+// Detecta las lentes del móvil (en iPhone: ultra gran angular, gran angular, teleobjetivo)
+async function detectLenses(){
+  const vids = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+  devices = {};
+  for (const d of vids) {
+    const l = d.label.toLowerCase();
+    if (/front|frontal|delantera|user|face/.test(l)) devices.front ??= d.deviceId;
+    else if (/ultra/.test(l)) devices.uw ??= d.deviceId;
+    else if (/tele/.test(l)) devices.tele ??= d.deviceId;
+    else if (/dual|triple/.test(l)) continue;
+    else devices.wide ??= d.deviceId;
   }
+  lenses = [];
+  if (devices.uw) lenses.push({ id: 'uw', label: '0,5x' });
+  lenses.push({ id: 'wide', label: '1x' }, { id: 'x2', label: '2x' });
+  if (devices.tele) lenses.push({ id: 'tele', label: '3x' });
+  lenses.push({ id: 'front', label: '🤳' });
+  showCamLenses();
+}
+function showCamLenses(){
+  renderLenses($('#camLenses'), lenses, lens, switchLens);
+  $('#camWrap').classList.toggle('zoom2', digitalZoom);
+}
+
+async function switchLens(id){
+  if (id === lens) return;
+  try { await getMedia(id); lens = id; store.set('lens', id); }
+  catch (e) { camStatus('No se pudo cambiar de lente: ' + e.message, 'err'); }
+  showCamLenses(); sendStatus();
+}
+
+async function getMedia(id){
+  let video = { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15 } };
+  if (id === 'front') video.facingMode = 'user';
+  else {
+    const dev = devices[id === 'x2' ? 'wide' : id];
+    if (dev) video.deviceId = { exact: dev }; else video.facingMode = 'environment';
+  }
+  // En iPhone conviene liberar la cámara anterior antes de abrir otra
+  localStream?.getVideoTracks().forEach(t => t.stop());
+  const s = await navigator.mediaDevices.getUserMedia({
+    video, audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true }
+  });
+  // 2x: zoom real del sensor si el navegador lo permite; si no, zoom digital en pantalla
+  digitalZoom = false;
+  if (id === 'x2') {
+    const vt = s.getVideoTracks()[0];
+    const cap = vt.getCapabilities?.().zoom;
+    if (cap && cap.max >= 2) await vt.applyConstraints({ advanced: [{ zoom: 2 }] }).catch(() => { digitalZoom = true; });
+    else digitalZoom = true;
+  }
+  for (const call of calls.values()) {
+    for (const sender of call.peerConnection?.getSenders() || []) {
+      const t = sender.track && s.getTracks().find(x => x.kind === sender.track.kind);
+      if (t) sender.replaceTrack(t);
+    }
+  }
+  localStream?.getTracks().forEach(t => t.stop());
   localStream = s;
   $('#camVideo').srcObject = s;
+}
+
+// Datos del móvil de la cámara que se envían al monitor
+let battery = null;
+navigator.getBattery?.().then(b => battery = b).catch(() => {});
+function sendStatus(){
+  const c = navigator.connection;
+  const msg = {
+    type: 'status',
+    battery: battery ? { level: Math.round(battery.level * 100), charging: battery.charging } : null,
+    net: c ? (c.type && c.type !== 'unknown' ? c.type + ' · ' : '') + (c.effectiveType || '') : null,
+    lens, lenses, digitalZoom
+  };
+  for (const conn of conns.values()) if (conn.open) try { conn.send(msg); } catch {}
 }
 
 function updateViewers(){
@@ -166,18 +260,20 @@ function retryCam(code, msg, ms){
   camRetry = setTimeout(() => connectCamPeer(code), ms);
 }
 
-async function connectCamPeer(code){
-  const peer = camPeer = new Peer(PREFIX + code, await peerOptions());
+function connectCamPeer(code){
+  const peer = camPeer = new Peer(PREFIX + code, peerOptions());
   peer.on('open', updateViewers);
   peer.on('connection', conn => {
     conn.on('open', () => {
       const call = peer.call(conn.peer, localStream);
-      calls.set(conn.peer, call); updateViewers();
+      calls.set(conn.peer, call); conns.set(conn.peer, conn); updateViewers();
+      setTimeout(sendStatus, 500);
       const drop = () => {
-        if (calls.get(conn.peer) === call) { calls.delete(conn.peer); updateViewers(); }
+        if (calls.get(conn.peer) === call) { calls.delete(conn.peer); conns.delete(conn.peer); updateViewers(); }
       };
       call.on('close', drop); call.on('error', drop);
       conn.on('close', () => { call.close(); drop(); });
+      conn.on('data', d => { if (d?.type === 'lens') switchLens(d.id); });
     });
   });
   peer.on('disconnected', () => {
@@ -187,35 +283,30 @@ async function connectCamPeer(code){
   });
   peer.on('error', err => {
     if (peer !== camPeer) return;
-    if (err.type === 'unavailable-id') retryCam(code, 'Código ocupado (¿otra cámara abierta con este código?). Reintentando…', 5000);
+    if (err.type === 'unavailable-id') retryCam(code, 'Ya hay otra cámara abierta. Reintentando…', 5000);
     else if (['network','server-error','socket-error','socket-closed'].includes(err.type)) retryCam(code, 'Sin conexión. Reintentando…', 4000);
     else if (err.type !== 'peer-unavailable') camStatus('Error: ' + err.type, 'err');
   });
 }
 
-$('#btnFlip').onclick = async () => {
-  facing = facing === 'user' ? 'environment' : 'user';
-  store.set('facing', facing);
-  try { await getMedia(); } catch (e) { camStatus('No se pudo cambiar de cámara: ' + e.message, 'err'); }
-};
 $('#btnDim').onclick = () => { $('#dim').hidden = false; };
 $('#dim').onclick = () => { $('#dim').hidden = true; };
 $('#btnCamBack').onclick = goHome;
 
 /* ===================== MODO MONITOR ===================== */
 let viewPeer, viewConn, viewCall, viewCode, retryTimer, remoteStream;
-let live = false, lostSince = 0, audioCtx, analyser, meterSrc;
+let live = false, lostSince = 0, audioCtx, analyser, meterSrc, lastStatusAt = 0;
 const viewStatus = (t,c) => setStatus($('#viewStatus'), t, c);
 
-async function startViewer(code){
+function startViewer(code){
   activeMode = 'view'; show('view'); keepAwake();
   viewCode = code;
   history.replaceState(null, '', '?ver');
-  viewPeer = new Peer(await peerOptions());
+  viewPeer = new Peer(peerOptions());
   viewPeer.on('open', tryConnect);
   viewPeer.on('call', call => {
     if (viewCall && viewCall !== call) viewCall.close();
-    viewCall = call;
+    viewCall = call; prevStats = null;
     call.answer();
     call.on('stream', s => {
       remoteStream = s; live = true; lostSince = 0;
@@ -254,8 +345,9 @@ function tryConnect(){
   if (viewPeer.disconnected) { viewPeer.reconnect(); scheduleRetry(4000); return; }
   if (!lostSince) viewStatus('Conectando con la cámara…', 'warn');
   try { viewConn?.close(); } catch {}
-  viewConn = viewPeer.connect(PREFIX + viewCode, { reliable: true });
-  viewConn.on('close', () => { if (live) lost(viewCall); });
+  const conn = viewConn = viewPeer.connect(PREFIX + viewCode, { reliable: true });
+  conn.on('close', () => { if (live && conn === viewConn) lost(viewCall); });
+  conn.on('data', onCamData);
   scheduleRetry(15000); // si en 15 s no llega vídeo, se reintenta
 }
 
@@ -270,20 +362,77 @@ function lost(call){
   scheduleRetry(2000);
 }
 
-// Pitido de aviso si la señal lleva perdida más de 20 s
+// Datos recibidos del móvil de la cámara
+function onCamData(d){
+  if (d?.type !== 'status') return;
+  lastStatusAt = Date.now();
+  if (d.battery) {
+    const b = d.battery, cls = b.level > 30 ? 'good' : b.level > 15 ? 'mid' : 'bad';
+    $('#iBat').innerHTML = `<b class="${cls}">${b.level}%</b> ${b.charging ? '⚡ cargando' : '(sin cargar)'}`;
+  } else $('#iBat').textContent = 'No disponible (Safari/iPhone no lo permite)';
+  $('#iNet').textContent = d.net || 'No disponible (Safari/iPhone no lo permite)';
+  renderLenses($('#viewLenses'), d.lenses || [], d.lens, id => {
+    try { viewConn?.send({ type: 'lens', id }); } catch {}
+  });
+  $('#viewWrap').classList.toggle('zoom2', !!d.digitalZoom);
+}
+
+// Calidad de la conexión medida en este móvil
+let prevStats = null;
+async function readStats(){
+  const pc = viewCall?.peerConnection;
+  if (!pc || !live) return;
+  const st = await pc.getStats();
+  let inb, pair;
+  st.forEach(r => {
+    if (r.type === 'inbound-rtp' && r.kind === 'video') inb = r;
+    if (r.type === 'transport' && r.selectedCandidatePairId) pair = st.get(r.selectedCandidatePairId);
+  });
+  if (!pair) st.forEach(r => { if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') pair = r; });
+  let kbps = 0, loss = 0;
+  if (inb && prevStats) {
+    kbps = (inb.bytesReceived - prevStats.bytes) * 8 / (inb.timestamp - prevStats.ts);
+    const dl = (inb.packetsLost || 0) - prevStats.lost, dr = inb.packetsReceived - prevStats.recv;
+    loss = dl + dr > 0 ? Math.max(0, dl) / (dl + dr) * 100 : 0;
+  }
+  if (inb) prevStats = { bytes: inb.bytesReceived, ts: inb.timestamp, lost: inb.packetsLost || 0, recv: inb.packetsReceived };
+  const rtt = pair?.currentRoundTripTime != null ? Math.round(pair.currentRoundTripTime * 1000) : null;
+  const relay = pair && [st.get(pair.localCandidateId), st.get(pair.remoteCandidateId)].some(c => c?.candidateType === 'relay');
+  const fps = inb?.framesPerSecond ? Math.round(inb.framesPerSecond) : 0;
+  let q = ['Buena', 'good'];
+  if ((rtt ?? 0) > 600 || loss > 5 || fps < 5) q = ['Mala', 'bad'];
+  else if ((rtt ?? 0) > 300 || loss > 1 || fps < 10) q = ['Regular', 'mid'];
+  $('#iQual').innerHTML = `<b class="${q[1]}">${q[0]}</b>` + (loss ? ` · ${loss.toFixed(1)}% pérdidas` : '');
+  $('#iRtt').textContent = rtt != null ? rtt + ' ms' : '—';
+  $('#iVid').textContent = `${fps} fps · ${Math.round(kbps)} kbps` + (inb?.frameWidth ? ` · ${inb.frameWidth}×${inb.frameHeight}` : '');
+  $('#iRoute').textContent = pair ? (relay ? 'Por servidor (TURN)' : 'Directa') : '—';
+}
+
+// Aviso si la señal se pierde o la cámara deja de responder
 setInterval(() => {
-  if (activeMode !== 'view' || live || !lostSince) return;
+  if (activeMode !== 'view') return;
+  readStats().catch(() => {});
+  if (live && lastStatusAt && Date.now() - lastStatusAt > 15000)
+    viewStatus('⚠️ El móvil del bebé no responde (' + ago(Date.now() - lastStatusAt) + '). ¿Pantalla bloqueada?', 'warn');
+  else if (live) viewStatus('En directo', 'ok');
+  if (live || !lostSince) return;
   const secs = Math.round((Date.now() - lostSince) / 1000);
   viewStatus('⚠️ Sin señal desde hace ' + secs + ' s. Reconectando…', 'err');
-  if (secs >= 20 && secs % 10 < 2) { beep(); navigator.vibrate?.([300,150,300]); }
+  if (secs >= 20 && secs % 10 < 2) { beep(440, 2); navigator.vibrate?.([300,150,300]); }
 }, 2000);
 
-function beep(){
+function beep(freq = 880, times = 2){
   if (!audioCtx) return;
-  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.frequency.value = 880; g.gain.value = 0.2;
-  o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + 0.4);
+  for (let i = 0; i < times; i++) {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    const t0 = audioCtx.currentTime + i * 0.25;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(t0); o.stop(t0 + 0.2);
+  }
 }
 
 $('#btnSound').onclick = async () => {
@@ -307,12 +456,16 @@ const thr = $('#threshold');
 thr.value = store.get('threshold') || 60;
 const updMark = () => { $('#meterMark').style.left = (100 - thr.value) + '%'; store.set('threshold', thr.value); };
 thr.oninput = updMark; updMark();
-$('#noiseAlert').checked = store.get('noiseAlert') !== '0';
-$('#noiseAlert').onchange = e => store.set('noiseAlert', e.target.checked ? '1' : '0');
+for (const id of ['optBeep','optVibe']) {
+  const el = $('#'+id);
+  el.checked = store.get(id) !== '0';
+  el.onchange = () => store.set(id, el.checked ? '1' : '0');
+}
 
-let loud = 0, lastAlarm = 0;
+let loud = 0, lastAlarm = 0, lastNoiseAt = 0, dotTimer;
 const buf = new Float32Array(1024);
 setInterval(() => {
+  if (lastNoiseAt) $('#lastNoise').textContent = 'Último ruido: ' + ago(Date.now() - lastNoiseAt);
   if (!analyser || !live) return;
   analyser.getFloatTimeDomainData(buf);
   let sum = 0; for (const x of buf) sum += x * x;
@@ -321,16 +474,25 @@ setInterval(() => {
   $('#meterBar').style.width = level + '%';
   const limit = 100 - thr.value; // más sensibilidad = umbral más bajo
   loud = level > limit ? loud + 1 : 0;
-  if (loud >= 3 && $('#noiseAlert').checked && Date.now() - lastAlarm > 5000) {
-    lastAlarm = Date.now();
-    navigator.vibrate?.([400,200,400]);
-    const s = $('#view'); s.classList.remove('alarm'); void s.offsetWidth; s.classList.add('alarm');
+  if (loud >= 3) {
+    lastNoiseAt = Date.now();
+    // Punto rojo sobre la imagen mientras haya ruido (y 4 s después)
+    $('#noiseDot').hidden = $('#noiseTag').hidden = false;
+    clearTimeout(dotTimer);
+    dotTimer = setTimeout(() => { $('#noiseDot').hidden = $('#noiseTag').hidden = true; }, 4000);
+    if (Date.now() - lastAlarm > 5000) {
+      lastAlarm = Date.now();
+      if ($('#optBeep').checked) beep(880, 2);
+      if ($('#optVibe').checked) navigator.vibrate?.([400,200,400]);
+      const s = $('#view'); s.classList.remove('alarm'); void s.offsetWidth; s.classList.add('alarm');
+    }
   }
 }, 200);
 
 $('#btnFull').onclick = () => {
-  const v = $('#remoteVideo');
-  (v.requestFullscreen || v.webkitEnterFullscreen || v.webkitRequestFullscreen)?.call(v);
+  const w = $('#viewWrap'), v = $('#remoteVideo');
+  if (w.requestFullscreen) w.requestFullscreen().catch(() => {});
+  else (v.webkitEnterFullscreen || v.webkitRequestFullscreen)?.call(v);
 };
 $('#btnViewBack').onclick = goHome;
 
