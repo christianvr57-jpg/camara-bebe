@@ -82,6 +82,21 @@
 const $ = s => document.querySelector(s);
 const PREFIX = 'vigilabebe-v1-';
 const ROOM = 'K7QM4XRP2D'; // código fijo: cámara y monitor se encuentran solos
+// Servidores STUN/TURN. El TURN (ExpressTURN) reenvía el vídeo cuando los móviles
+// no pueden conectarse directamente, p. ej. con datos móviles.
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  {
+    urls: [
+      'turn:free.expressturn.com:3478',
+      'turn:free.expressturn.com:3478?transport=tcp',
+      'turn:free.expressturn.com:443?transport=tcp'
+    ],
+    username: '000000002110593949',
+    credential: 'qylI2+y6BMAtTcoCUc/YW89uVBM='
+  }
+];
+async function peerOptions(){ return { debug: 1, config: { iceServers: ICE_SERVERS } }; }
 const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const store = {
   get(k){ try { return localStorage.getItem(k); } catch { return null; } },
@@ -121,7 +136,8 @@ async function startCamera(){
 
 async function getMedia(){
   const s = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } },
+    // Resolución moderada para que vaya fluido con datos móviles
+    video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15 } },
     audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true }
   });
   if (localStream) {
@@ -150,8 +166,8 @@ function retryCam(code, msg, ms){
   camRetry = setTimeout(() => connectCamPeer(code), ms);
 }
 
-function connectCamPeer(code){
-  const peer = camPeer = new Peer(PREFIX + code, { debug: 1 });
+async function connectCamPeer(code){
+  const peer = camPeer = new Peer(PREFIX + code, await peerOptions());
   peer.on('open', updateViewers);
   peer.on('connection', conn => {
     conn.on('open', () => {
@@ -191,11 +207,11 @@ let viewPeer, viewConn, viewCall, viewCode, retryTimer, remoteStream;
 let live = false, lostSince = 0, audioCtx, analyser, meterSrc;
 const viewStatus = (t,c) => setStatus($('#viewStatus'), t, c);
 
-function startViewer(code){
+async function startViewer(code){
   activeMode = 'view'; show('view'); keepAwake();
-  viewCode = code; store.set('viewCode', code);
-  history.replaceState(null, '', '?ver=' + code);
-  viewPeer = new Peer({ debug: 1 });
+  viewCode = code;
+  history.replaceState(null, '', '?ver');
+  viewPeer = new Peer(await peerOptions());
   viewPeer.on('open', tryConnect);
   viewPeer.on('call', call => {
     if (viewCall && viewCall !== call) viewCall.close();
