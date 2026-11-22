@@ -3,67 +3,112 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0b1120">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vigilabebé">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <title>Vigilabebé</title>
 <style>
-  :root{--bg:#0f172a;--card:#1e293b;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444}
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  section{min-height:100%;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;max-width:720px;margin:0 auto}
+  :root{--bg:#0b1120;--card:#162033;--card2:#1f2b42;--txt:#e5ecf6;--mut:#8b9ab3;--acc:#7dd3fc;--acc2:#a78bfa;--ok:#4ade80;--warn:#fbbf24;--err:#f87171}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--txt);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  body{background:radial-gradient(1200px 600px at 50% -200px,#1b2a4a 0,var(--bg) 70%) fixed}
+  section{min-height:100vh;padding:16px;padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;max-width:720px;margin:0 auto}
   [hidden]{display:none!important}
-  h1{margin:8px 0 0;font-size:1.6rem}
+  h1{margin:24px 0 0;font-size:2rem;letter-spacing:-.02em}
+  h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
   p{margin:0;color:var(--mut)}
-  button{appearance:none;border:0;border-radius:12px;padding:14px 16px;font:inherit;font-weight:600;background:var(--card);color:var(--txt);cursor:pointer}
-  button.big{padding:22px 16px;font-size:1.15rem;text-align:left}
-  button.big small{display:block;font-weight:400;color:var(--mut);margin-top:4px}
-  button.pri{background:var(--acc);color:#0b1220}
-  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .hint{font-size:.85rem}
+  strong{font-size:.95rem}
+  button,select{appearance:none;border:0;border-radius:14px;padding:14px 16px;font:inherit;font-weight:600;background:var(--card2);color:var(--txt);cursor:pointer;transition:background .2s,transform .1s}
+  button:active{transform:scale(.97)}
+  button.big{padding:22px 18px;font-size:1.15rem;text-align:left;border-radius:18px}
+  button.big small{display:block;font-weight:400;color:var(--mut);margin-top:4px;font-size:.9rem}
+  button.pri{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b1120}
+  button.pri small{color:#1e293b}
+  button.on{background:var(--acc);color:#0b1120}
+  button.rec{background:var(--err);color:#fff;animation:pulseBg 1.2s infinite}
+  @keyframes pulseBg{50%{opacity:.75}}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .row>*{flex:1 1 auto}
-  .lenses{display:flex;gap:6px}
-  .lenses button{flex:1;padding:12px 6px;border-radius:999px}
-  .lenses button.on{background:var(--acc);color:#0b1220}
-  .card{background:var(--card);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
-  .vwrap{position:relative;overflow:hidden;border-radius:14px;background:#000;aspect-ratio:4/3}
-  #view .vwrap{flex:1;min-height:40vh;aspect-ratio:auto}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .grid button{padding:12px 4px;font-size:.88rem;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .grid button b{font-size:1.4rem;font-weight:400}
+  .pills{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:999px}
+  .pills button{flex:1;padding:10px 4px;border-radius:999px;background:transparent;font-size:.92rem}
+  .pills button.on{background:var(--acc);color:#0b1120}
+  .card{background:var(--card);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;border:1px solid rgba(255,255,255,.04)}
+  .vwrap{position:relative;overflow:hidden;border-radius:18px;background:#000;aspect-ratio:4/3;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  #view .vwrap{min-height:42vh;aspect-ratio:auto;flex:none;height:52vh}
   .vwrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:transform .3s}
   .vwrap.zoom2 video{transform:scale(2)}
-  #noiseDot{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--err);box-shadow:0 0 0 4px rgba(239,68,68,.35);animation:pulse 1s infinite;z-index:2}
-  @keyframes pulse{50%{transform:scale(1.35);box-shadow:0 0 0 10px rgba(239,68,68,0)}}
-  #noiseTag{position:absolute;top:10px;right:44px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:8px;font-size:.85rem;font-weight:700;z-index:2}
-  .status{padding:10px 12px;border-radius:10px;background:var(--card);font-weight:600}
+  .badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;z-index:2}
+  .badge::first-letter{color:var(--err)}
+  #noiseDot{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--err);box-shadow:0 0 0 4px rgba(248,113,113,.35);animation:pulse 1s infinite;z-index:2}
+  @keyframes pulse{50%{transform:scale(1.35);box-shadow:0 0 0 10px rgba(248,113,113,0)}}
+  #noiseTag{position:absolute;top:11px;right:44px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:8px;font-size:.8rem;font-weight:800;z-index:2}
+  .audioOnly{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:2.4rem;color:var(--txt);background:radial-gradient(circle,#1b2a4a,#000);z-index:1;text-align:center;padding:16px}
+  .audioOnly small{font-size:.9rem;color:var(--mut)}
+  .status{padding:10px 14px;border-radius:14px;background:var(--card);font-weight:600;font-size:.95rem}
   .status::before{content:"●  "}
   .status.ok::before{color:var(--ok)} .status.warn::before{color:var(--warn)} .status.err::before{color:var(--err)}
-  .info{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.95rem}
+  .info{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:.92rem}
   .info span:nth-child(odd){color:var(--mut)}
   .good{color:var(--ok)} .mid{color:var(--warn)} .bad{color:var(--err)}
-  .meter{height:14px;background:#0b1220;border-radius:7px;overflow:hidden;position:relative}
+  .meter{height:12px;background:#0b1120;border-radius:6px;overflow:hidden;position:relative}
   .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ok),var(--warn),var(--err));transition:width .15s}
   .meter b{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+  #spark{width:100%;height:64px;display:block;background:#0b1120;border-radius:10px}
   .alarm{animation:flash .5s 4}
   @keyframes flash{50%{box-shadow:0 0 0 6px var(--err) inset;background:#450a0a}}
-  #dim{position:fixed;inset:0;background:#000;z-index:10;display:flex;align-items:flex-end;justify-content:center;padding:24px;color:#333;font-size:.9rem}
-  label{display:flex;align-items:center;gap:8px;color:var(--mut)}
-  label input[type=checkbox]{width:20px;height:20px}
-  input[type=range]{flex:1}
+  label{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:.92rem}
+  label input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc);flex:none}
+  input[type=range]{flex:1;accent-color:var(--acc)}
+  select{padding:12px;flex:0 0 auto}
+  /* Pantalla negra del móvil cámara (OLED en negro = casi sin consumo) */
+  #dim{position:fixed;inset:0;background:#000;z-index:10;display:flex;align-items:flex-end;justify-content:center;padding:28px;color:#1c1c1c;font-size:.85rem;transition:background 1s}
+  #dim.light{background:#3a1c00}
+  /* Pantalla negra del monitor */
+  #vdim{position:fixed;inset:0;background:#000;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#3a3a3a;font-size:.9rem;padding:24px;text-align:center}
+  #vdim .lvl{width:60%;height:4px;background:#111;border-radius:2px;overflow:hidden}
+  #vdim .lvl i{display:block;height:100%;width:0;background:#3b4b66;transition:width .2s}
+  #vdim.alert{animation:vflash 1s 4}
+  #vdim.alert .big{display:block}
+  #vdim .big{display:none;font-size:2.5rem;color:var(--err);font-weight:800}
+  @keyframes vflash{50%{background:#3b0909}}
+  .tips{display:flex;flex-direction:column;gap:6px;font-size:.88rem;color:var(--mut);padding-left:2px}
 </style>
 </head>
 <body>
 
 <!-- INICIO -->
 <section id="home">
-  <h1>👶 Vigilabebé</h1>
-  <p>Usa dos móviles: uno se queda junto al bebé como cámara y el otro lo usas tú para mirar.</p>
-  <button class="big pri" id="btnCam">📷 Este móvil es la CÁMARA<small>Ponlo junto al bebé y enchúfalo al cargador</small></button>
+  <h1>👶 <span>Vigilabebé</span></h1>
+  <p>Dos móviles: uno se queda junto al bebé como cámara y el otro lo usas tú para mirar y escuchar.</p>
+  <button class="big pri" id="btnCam">📷 Este móvil es la CÁMARA<small>Ponlo junto al bebé, mejor enchufado</small></button>
   <button class="big" id="btnView">👀 VER AL BEBÉ<small>Desde tu móvil, estés donde estés</small></button>
+  <div class="tips">
+    <span>💡 Añádela a la pantalla de inicio (Compartir → «Añadir a inicio») para abrirla como una app.</span>
+    <span>🔋 La cámara se apaga sola cuando nadie está mirando y su pantalla se queda en negro.</span>
+  </div>
 </section>
 
 <!-- CÁMARA -->
 <section id="cam" hidden>
   <div class="status warn" id="camStatus">Iniciando cámara…</div>
-  <div class="vwrap" id="camWrap"><video id="camVideo" autoplay playsinline muted></video></div>
-  <div class="lenses" id="camLenses"></div>
-  <button id="btnDim">🌙 Oscurecer pantalla</button>
+  <div class="vwrap" id="camWrap">
+    <video id="camVideo" autoplay playsinline muted></video>
+    <div class="audioOnly" id="camOff" hidden>💤<small id="camOffText">Cámara apagada para ahorrar batería</small></div>
+  </div>
+  <div class="pills" id="camLenses"></div>
+  <button id="btnPreview">👁 Ver vista previa (1 min)</button>
   <p id="viewersInfo">Monitores conectados: 0</p>
+  <p class="hint">🔋 Para ahorrar batería: la pantalla se pone en negro sola a los 15 s, y la cámara y el micro se apagan cuando nadie está mirando. Se encienden solos al conectarse un monitor.</p>
+  <button id="btnDim">🌙 Pantalla en negro ahora</button>
   <button id="btnCamBack">← Salir</button>
 </section>
 
@@ -72,20 +117,57 @@
   <div class="status warn" id="viewStatus">Conectando…</div>
   <div class="vwrap" id="viewWrap">
     <video id="remoteVideo" autoplay playsinline muted></video>
+    <div class="badge" id="liveBadge" hidden>● EN DIRECTO · <span id="liveTime">00:00</span></div>
     <div id="noiseDot" hidden></div><div id="noiseTag" hidden>RUIDO</div>
+    <div class="audioOnly" id="viewAudioOnly" hidden>🎧<small>Modo solo audio · vídeo apagado para ahorrar batería</small></div>
   </div>
-  <div class="lenses" id="viewLenses"></div>
+  <div class="pills" id="viewLenses"></div>
   <button class="pri" id="btnSound">🔊 Activar sonido y avisos</button>
+  <div class="grid">
+    <button id="btnAudioOnly"><b>🎧</b>Solo audio</button>
+    <button id="btnTalk"><b>🎤</b>Hablar</button>
+    <button id="btnSnap"><b>📸</b>Foto</button>
+    <button id="btnViewDim"><b>🌙</b>Pantalla negra</button>
+    <button id="btnFull"><b>⛶</b>Completa</button>
+    <button id="btnViewBack"><b>←</b>Salir</button>
+  </div>
+
   <div class="card" id="soundCard" hidden>
+    <strong>🔊 Sonido</strong>
     <div class="meter"><i id="meterBar"></i><b id="meterMark"></b></div>
+    <canvas id="spark"></canvas>
+    <p class="hint">Nivel de ruido de los últimos 30 minutos · la línea es el umbral de aviso</p>
     <label>Sensibilidad <input type="range" id="threshold" min="10" max="95" value="60"></label>
     <div class="row">
       <label><input type="checkbox" id="optBeep" checked> Pitido</label>
       <label><input type="checkbox" id="optVibe" checked> Vibración</label>
     </div>
+    <label><input type="checkbox" id="optAutoVideo" checked> En «solo audio», encender el vídeo si hay ruido</label>
     <p id="lastNoise">Sin ruidos detectados</p>
   </div>
+
   <div class="card">
+    <strong>🎞️ Calidad del vídeo</strong>
+    <div class="pills" id="qualPills"></div>
+    <p class="hint">«Ahorro» y «Solo audio» son los que menos batería gastan en el móvil del bebé.</p>
+  </div>
+
+  <div class="card">
+    <strong>🌙 Para el bebé</strong>
+    <div class="row">
+      <button id="btnWhite">🌊 Ruido blanco</button>
+      <select id="whiteMin">
+        <option value="15">15 min</option><option value="30" selected>30 min</option>
+        <option value="60">1 h</option><option value="0">Sin fin</option>
+      </select>
+    </div>
+    <label>Volumen <input type="range" id="whiteVol" min="5" max="100" value="40"></label>
+    <button id="btnLight">💡 Luz quitamiedos</button>
+    <p class="hint">Suenan y se ven en el móvil del bebé. Con ruido blanco puede que tengas que bajar la sensibilidad.</p>
+  </div>
+
+  <div class="card">
+    <strong>📱 Estado</strong>
     <div class="info">
       <span>🔋 Batería</span><span id="iBat">—</span>
       <span>📶 Red</span><span id="iNet">—</span>
@@ -95,13 +177,16 @@
       <span>🛰️ Ruta</span><span id="iRoute">—</span>
     </div>
   </div>
-  <div class="row">
-    <button id="btnFull">⛶ Pantalla completa</button>
-    <button id="btnViewBack">← Salir</button>
-  </div>
 </section>
 
-<div id="dim" hidden>Toca para volver a encender</div>
+<div id="dim" hidden><span id="dimText"></span></div>
+<div id="vdim" hidden>
+  <span class="big">RUIDO</span>
+  <div class="lvl"><i id="vdimLvl"></i></div>
+  <span id="vdimText">Escuchando…</span>
+  <span>Toca para volver</span>
+</div>
+<audio id="talkAudio" autoplay playsinline></audio>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
@@ -125,6 +210,14 @@ const ICE_SERVERS = [
 ];
 const peerOptions = () => ({ debug: 1, config: { iceServers: ICE_SERVERS } });
 
+// Perfiles de calidad: menos resolución/fps/bitrate = menos batería en la cámara
+const QUALITY = {
+  low:  { label: 'Ahorro', w: 480,  h: 360, fps: 10, kbps: 250 },
+  med:  { label: 'Normal', w: 640,  h: 480, fps: 15, kbps: 550 },
+  high: { label: 'Alta',   w: 1280, h: 720, fps: 24, kbps: 1500 }
+};
+const AUDIO = { echoCancellation: true, noiseSuppression: false, autoGainControl: true };
+
 const store = {
   get(k){ try { return localStorage.getItem(k); } catch { return null; } },
   set(k,v){ try { localStorage.setItem(k,v); } catch {} }
@@ -132,9 +225,10 @@ const store = {
 function show(id){ for (const s of ['home','cam','view']) $('#'+s).hidden = s !== id; }
 function setStatus(el, text, cls){ el.textContent = text; el.className = 'status ' + cls; }
 const goHome = () => { location.href = location.pathname; };
-const ago = ms => { const s = Math.round(ms/1000); return s < 60 ? `hace ${s} s` : `hace ${Math.round(s/60)} min`; };
+const ago = ms => { const s = Math.round(ms/1000); return s < 60 ? `hace ${s} s` : s < 3600 ? `hace ${Math.round(s/60)} min` : `hace ${(s/3600).toFixed(1)} h`; };
+const isLive = t => !!t && t.readyState === 'live';
 
-// Mantener la pantalla encendida
+// Mantener la pantalla encendida (si no, el móvil se bloquea y deja de emitir)
 let activeMode = null;
 async function keepAwake(){
   try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch {}
@@ -143,33 +237,146 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && activeMode) keepAwake();
 });
 
-function renderLenses(el, lenses, current, onPick){
+function renderPills(el, items, current, onPick){
   el.innerHTML = '';
-  for (const l of lenses) {
+  for (const it of items) {
     const b = document.createElement('button');
-    b.textContent = l.label; b.className = l.id === current ? 'on' : '';
-    b.onclick = () => onPick(l.id);
+    b.textContent = it.label; b.className = it.id === current ? 'on' : '';
+    b.onclick = () => onPick(it.id);
     el.appendChild(b);
   }
 }
 
-/* ===================== MODO CÁMARA ===================== */
-let camPeer, localStream, camRetry, lenses = [], devices = {}, digitalZoom = false;
+/* =========================================================
+   MODO CÁMARA
+   Ahorro de batería:
+   - Cámara y micro apagados mientras no haya ningún monitor conectado
+   - Pantalla en negro automática (en OLED el negro casi no consume)
+   - Vista previa local desconectada mientras la pantalla está en negro
+   - Perfiles de calidad con límite de fps y bitrate en el codificador
+   - Modo «solo audio»: la cámara se apaga y no se codifica vídeo
+   ========================================================= */
+let camPeer, camRetry, idleTimer, dimTimer, previewTimer;
+let camTrack = null, micTrack = null, acquiring = null;
+let devices = {}, lenses = [], digitalZoom = false, dimmed = false, previewUntil = 0;
 let lens = store.get('lens') || 'wide';
+let quality = QUALITY[store.get('quality')] ? store.get('quality') : 'med';
+let audioOnly = store.get('audioOnly') === '1';
+let nightLight = false;
 const calls = new Map(), conns = new Map();
 const camStatus = (t,c) => setStatus($('#camStatus'), t, c);
 
 async function startCamera(){
   activeMode = 'cam'; show('cam'); keepAwake();
+  unlockCamAudio();
   try {
-    await getMedia(lens).catch(() => getMedia(lens = 'wide'));
+    await serial(() => ensureTracks());
     await detectLenses();
-    // La primera vez aún no se conocían las lentes: abrir la guardada de verdad
-    if (lens !== 'wide' && lens !== 'front') await getMedia(lens).catch(() => getMedia(lens = 'wide'));
-    showCamLenses();
+    // La primera vez aún no se conocían las lentes: se abre la guardada al aplicar el modo
+    if (lens !== 'wide' && lens !== 'front') await serial(() => { camTrack?.stop(); camTrack = null; });
   } catch (e) { camStatus('No se pudo acceder a la cámara/micrófono: ' + e.message, 'err'); return; }
+  startPreview();
   connectCamPeer(ROOM);
-  setInterval(sendStatus, 3000);
+  setInterval(sendStatus, 10000);
+  scheduleIdle();
+  armDim();
+}
+
+function videoConstraints(id){
+  const q = QUALITY[quality];
+  const v = { width: { ideal: q.w }, height: { ideal: q.h }, frameRate: { ideal: q.fps, max: q.fps } };
+  if (id === 'front') v.facingMode = 'user';
+  else {
+    const dev = devices[id === 'x2' ? 'wide' : id];
+    if (dev) v.deviceId = { exact: dev }; else v.facingMode = 'environment';
+  }
+  return v;
+}
+
+// 2x: zoom real del sensor si el navegador lo permite; si no, zoom digital en pantalla
+async function applyZoom(t, id){
+  digitalZoom = false;
+  if (id !== 'x2') return;
+  const cap = t.getCapabilities?.().zoom;
+  if (cap && cap.max >= 2) await t.applyConstraints({ advanced: [{ zoom: 2 }] }).catch(() => { digitalZoom = true; });
+  else digitalZoom = true;
+}
+
+// Abre cámara y/o micro si hacen falta (una sola petición para no repetir permisos)
+function ensureTracks(withVideo = true){
+  const needV = withVideo && !isLive(camTrack), needA = !isLive(micTrack);
+  if (!needV && !needA) return Promise.resolve();
+  return acquiring ??= (async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: needV ? videoConstraints(lens) : false, audio: needA ? AUDIO : false
+      });
+      for (const t of s.getTracks()) {
+        if (t.kind === 'video') { camTrack = t; await applyZoom(t, lens); } else micTrack = t;
+      }
+    } finally { acquiring = null; }
+  })();
+}
+
+async function getVideoTrack(id){
+  const s = await navigator.mediaDevices.getUserMedia({ video: videoConstraints(id) });
+  const t = s.getVideoTracks()[0];
+  await applyZoom(t, id);
+  return t;
+}
+
+// ¿Hace falta la cámara encendida ahora mismo?
+const needCamera = () => (calls.size > 0 && !audioOnly) || Date.now() < previewUntil;
+
+// Cola para que los cambios de cámara no se pisen entre sí
+let camQueue = Promise.resolve();
+function serial(fn){ const p = camQueue.then(fn); camQueue = p.catch(() => {}); return p; }
+
+const applyMode = () => serial(applyModeNow);
+async function applyModeNow(){
+  if (needCamera() && !isLive(camTrack)) {
+    try { camTrack = await getVideoTrack(lens); }
+    catch (e) {
+      try { lens = 'wide'; camTrack = await getVideoTrack(lens); }
+      catch { camStatus('No se pudo encender la cámara: ' + e.message, 'err'); }
+    }
+  }
+  if (!needCamera() && camTrack) { camTrack.stop(); camTrack = null; }
+  for (const call of calls.values()) {
+    setSender(call, 'video', camTrack);
+    if (isLive(micTrack)) setSender(call, 'audio', micTrack);
+    applyBitrate(call);
+  }
+  updatePreview(); updateViewers(); showCamLenses();
+}
+
+function setSender(call, kind, track){
+  const tr = call.peerConnection?.getTransceivers?.().find(t => t.receiver.track?.kind === kind);
+  if (tr && tr.sender.track !== track) tr.sender.replaceTrack(track).catch(() => {});
+}
+
+// Limita fps y bitrate en el codificador: menos CPU y menos radio = menos batería
+async function applyBitrate(call){
+  const tr = call.peerConnection?.getTransceivers?.().find(t => t.receiver.track?.kind === 'video');
+  if (!tr) return;
+  const q = QUALITY[quality];
+  try {
+    const p = tr.sender.getParameters();
+    if (!p.encodings || !p.encodings.length) return;
+    p.encodings[0].maxBitrate = q.kbps * 1000;
+    p.encodings[0].maxFramerate = q.fps;
+    await tr.sender.setParameters(p);
+  } catch {}
+}
+
+async function setQuality(q){
+  if (!QUALITY[q]) return;
+  quality = q; store.set('quality', q);
+  const c = QUALITY[q];
+  if (isLive(camTrack)) await camTrack.applyConstraints({
+    width: { ideal: c.w }, height: { ideal: c.h }, frameRate: { ideal: c.fps, max: c.fps }
+  }).catch(() => {});
+  for (const call of calls.values()) applyBitrate(call);
 }
 
 // Detecta las lentes del móvil (en iPhone: ultra gran angular, gran angular, teleobjetivo)
@@ -189,52 +396,124 @@ async function detectLenses(){
   lenses.push({ id: 'wide', label: '1x' }, { id: 'x2', label: '2x' });
   if (devices.tele) lenses.push({ id: 'tele', label: '3x' });
   lenses.push({ id: 'front', label: '🤳' });
-  showCamLenses();
 }
 function showCamLenses(){
-  renderLenses($('#camLenses'), lenses, lens, switchLens);
-  $('#camWrap').classList.toggle('zoom2', digitalZoom);
+  renderPills($('#camLenses'), lenses, lens, switchLens);
+  $('#camWrap').classList.toggle('zoom2', digitalZoom && isLive(camTrack));
 }
 
 async function switchLens(id){
-  if (id === lens) return;
-  try { await getMedia(id); lens = id; store.set('lens', id); }
-  catch (e) { camStatus('No se pudo cambiar de lente: ' + e.message, 'err'); }
-  showCamLenses(); sendStatus();
+  if (id === lens && isLive(camTrack)) return;
+  lens = id; store.set('lens', id);
+  // En iPhone hay que soltar la cámara antes de abrir otra
+  await serial(() => { if (camTrack) { camTrack.stop(); camTrack = null; } });
+  await applyMode();
+  sendStatus();
 }
 
-async function getMedia(id){
-  let video = { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15 } };
-  if (id === 'front') video.facingMode = 'user';
-  else {
-    const dev = devices[id === 'x2' ? 'wide' : id];
-    if (dev) video.deviceId = { exact: dev }; else video.facingMode = 'environment';
-  }
-  // En iPhone conviene liberar la cámara anterior antes de abrir otra
-  localStream?.getVideoTracks().forEach(t => t.stop());
-  const s = await navigator.mediaDevices.getUserMedia({
-    video, audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true }
-  });
-  // 2x: zoom real del sensor si el navegador lo permite; si no, zoom digital en pantalla
-  digitalZoom = false;
-  if (id === 'x2') {
-    const vt = s.getVideoTracks()[0];
-    const cap = vt.getCapabilities?.().zoom;
-    if (cap && cap.max >= 2) await vt.applyConstraints({ advanced: [{ zoom: 2 }] }).catch(() => { digitalZoom = true; });
-    else digitalZoom = true;
-  }
-  for (const call of calls.values()) {
-    for (const sender of call.peerConnection?.getSenders() || []) {
-      const t = sender.track && s.getTracks().find(x => x.kind === sender.track.kind);
-      if (t) sender.replaceTrack(t);
-    }
-  }
-  localStream?.getTracks().forEach(t => t.stop());
-  localStream = s;
-  $('#camVideo').srcObject = s;
+// Vista previa local: solo mientras se ve la pantalla
+function updatePreview(){
+  const v = $('#camVideo');
+  const want = !dimmed && isLive(camTrack);
+  if (want && v.srcObject?.getVideoTracks()[0] !== camTrack) v.srcObject = new MediaStream([camTrack]);
+  if (!want && v.srcObject) v.srcObject = null;
+  $('#camOff').hidden = isLive(camTrack);
+  $('#camOffText').textContent = calls.size && audioOnly
+    ? 'Modo solo audio: cámara apagada para ahorrar batería'
+    : 'Cámara en espera: se enciende sola cuando alguien mire';
+  $('#btnPreview').hidden = isLive(camTrack) || calls.size > 0;
 }
 
-// Datos del móvil de la cámara que se envían al monitor
+function startPreview(){
+  previewUntil = Date.now() + 60000;
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(applyMode, 60500);
+  applyMode();
+}
+
+// Sin monitores durante 20 s: se apagan cámara y micro
+function scheduleIdle(){
+  clearTimeout(idleTimer);
+  if (calls.size) return;
+  idleTimer = setTimeout(() => {
+    if (calls.size) return;
+    micTrack?.stop(); micTrack = null;
+    applyMode();
+  }, 20000);
+}
+
+// Pantalla en negro automática
+function armDim(){
+  clearTimeout(dimTimer);
+  dimTimer = setTimeout(() => setDim(true), 15000);
+}
+function setDim(on){
+  dimmed = on;
+  $('#dim').hidden = !on;
+  updatePreview(); updateDimText();
+  if (!on) armDim();
+}
+function updateDimText(){
+  $('#dim').classList.toggle('light', nightLight);
+  $('#dimText').textContent = nightLight ? '' :
+    (calls.size ? `● Emitiendo a ${calls.size} monitor${calls.size > 1 ? 'es' : ''}` : '● En espera') +
+    (audioOnly && calls.size ? ' · solo audio' : '') + ' · toca para ver';
+}
+$('#dim').onclick = () => setDim(false);
+document.addEventListener('pointerdown', () => { if (activeMode === 'cam' && !dimmed) armDim(); });
+
+// Audio en el móvil de la cámara (ruido blanco y voz del monitor)
+let camAC, noiseSrc, noiseGain, whiteEnds = 0, whiteTimer, whiteVol = 40;
+function unlockCamAudio(){
+  try {
+    camAC = new (window.AudioContext || window.webkitAudioContext)();
+    camAC.resume().then(() => camAC.suspend()); // se desbloquea con el toque y se suspende (no gasta)
+  } catch {}
+  const a = $('#talkAudio'); a.muted = true; a.play().catch(() => {}); a.muted = false;
+}
+const volGain = v => Math.pow(v / 100, 2) * 0.8;
+async function startWhite(vol, min){
+  if (!camAC) return;
+  await camAC.resume().catch(() => {});
+  whiteVol = vol;
+  if (!noiseSrc) {
+    // Ruido marrón (más suave y grave que el blanco puro)
+    const len = camAC.sampleRate * 4, buf = camAC.createBuffer(1, len, camAC.sampleRate), d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+    noiseSrc = camAC.createBufferSource(); noiseSrc.buffer = buf; noiseSrc.loop = true;
+    noiseGain = camAC.createGain();
+    noiseSrc.connect(noiseGain).connect(camAC.destination);
+    noiseSrc.start();
+  }
+  noiseGain.gain.setTargetAtTime(volGain(vol), camAC.currentTime, 0.3);
+  clearTimeout(whiteTimer);
+  whiteEnds = min > 0 ? Date.now() + min * 60000 : 0;
+  if (min > 0) whiteTimer = setTimeout(stopWhite, min * 60000);
+}
+function stopWhite(){
+  clearTimeout(whiteTimer); whiteEnds = 0;
+  if (!noiseSrc) return;
+  const src = noiseSrc; noiseSrc = null;
+  noiseGain.gain.setTargetAtTime(0, camAC.currentTime, 0.8); // se apaga suavemente
+  setTimeout(() => { try { src.stop(); } catch {} if (!noiseSrc) camAC.suspend(); sendStatus(); }, 4000);
+  sendStatus();
+}
+
+function onViewerCmd(d){
+  switch (d?.type) {
+    case 'lens': switchLens(d.id); break;
+    case 'quality': setQuality(d.q); break;
+    case 'audioOnly': audioOnly = !!d.on; store.set('audioOnly', audioOnly ? '1' : '0'); applyMode(); break;
+    case 'white': d.on ? startWhite(+d.vol || 40, +d.min || 0) : stopWhite(); break;
+    case 'whiteVol': whiteVol = +d.vol; if (noiseGain && noiseSrc) noiseGain.gain.setTargetAtTime(volGain(whiteVol), camAC.currentTime, 0.2); break;
+    case 'light': nightLight = !!d.on; if (nightLight && !dimmed) setDim(true); updateDimText(); break;
+  }
+  updateDimText();
+  setTimeout(sendStatus, 300);
+}
+
+// Datos del móvil de la cámara que se envían al monitor (cada 10 s y tras cada cambio)
 let battery = null;
 navigator.getBattery?.().then(b => battery = b).catch(() => {});
 function sendStatus(){
@@ -243,14 +522,18 @@ function sendStatus(){
     type: 'status',
     battery: battery ? { level: Math.round(battery.level * 100), charging: battery.charging } : null,
     net: c ? (c.type && c.type !== 'unknown' ? c.type + ' · ' : '') + (c.effectiveType || '') : null,
-    lens, lenses, digitalZoom
+    lens, lenses, digitalZoom, quality, audioOnly, nightLight,
+    white: { on: !!noiseSrc, vol: whiteVol, remain: whiteEnds ? Math.ceil((whiteEnds - Date.now()) / 60000) : 0 }
   };
   for (const conn of conns.values()) if (conn.open) try { conn.send(msg); } catch {}
 }
 
 function updateViewers(){
   $('#viewersInfo').textContent = 'Monitores conectados: ' + calls.size;
-  if (camPeer?.open) camStatus(calls.size ? 'Emitiendo en directo' : 'Lista. Esperando al monitor…', 'ok');
+  if (!camPeer?.open) return;
+  if (calls.size) camStatus(audioOnly ? 'Emitiendo · solo audio 🔋' : 'Emitiendo en directo', 'ok');
+  else camStatus(isLive(micTrack) || isLive(camTrack) ? 'Lista. Esperando al monitor…' : 'En espera · cámara y micro apagados hasta que alguien mire 🔋', 'ok');
+  updateDimText();
 }
 
 function retryCam(code, msg, ms){
@@ -264,17 +547,41 @@ function connectCamPeer(code){
   const peer = camPeer = new Peer(PREFIX + code, peerOptions());
   peer.on('open', updateViewers);
   peer.on('connection', conn => {
-    conn.on('open', () => {
-      const call = peer.call(conn.peer, localStream);
-      calls.set(conn.peer, call); conns.set(conn.peer, conn); updateViewers();
-      setTimeout(sendStatus, 500);
+    conn.on('open', async () => {
+      clearTimeout(idleTimer);
+      // Siempre se ofrece pista de vídeo (aunque sea en solo audio) para poder activarla luego;
+      // en solo audio se apaga en cuanto conecta
+      try { await serial(() => ensureTracks(true)); }
+      catch (e) { camStatus('No se pudo encender la cámara: ' + e.message, 'err'); conn.close(); return; }
+      const call = peer.call(conn.peer, new MediaStream([camTrack, micTrack].filter(isLive)));
+      calls.set(conn.peer, call); conns.set(conn.peer, conn);
+      const pc = call.peerConnection;
+      const onConnected = () => { applyBitrate(call); applyMode(); sendStatus(); };
+      pc?.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'connected') onConnected(); });
+      setTimeout(onConnected, 4000);
+      updateViewers(); updatePreview();
       const drop = () => {
-        if (calls.get(conn.peer) === call) { calls.delete(conn.peer); conns.delete(conn.peer); updateViewers(); }
+        if (calls.get(conn.peer) !== call) return;
+        calls.delete(conn.peer); conns.delete(conn.peer);
+        applyMode(); scheduleIdle();
       };
       call.on('close', drop); call.on('error', drop);
       conn.on('close', () => { call.close(); drop(); });
-      conn.on('data', d => { if (d?.type === 'lens') switchLens(d.id); });
+      // Latido: si el monitor deja de dar señales 20 s (p. ej. cerró la app), se corta y se ahorra batería
+      let lastSeen = Date.now();
+      const hb = setInterval(() => {
+        if (calls.get(conn.peer) !== call) { clearInterval(hb); return; }
+        if (Date.now() - lastSeen > 20000) { clearInterval(hb); try { conn.close(); } catch {} call.close(); drop(); }
+      }, 5000);
+      conn.on('data', d => { lastSeen = Date.now(); if (d?.type !== 'ping') onViewerCmd(d); });
     });
+  });
+  // El monitor llama para hablar al bebé
+  peer.on('call', call => {
+    if (!call.metadata?.talk) { call.close(); return; }
+    call.answer();
+    call.on('stream', s => { const a = $('#talkAudio'); a.srcObject = s; a.play().catch(() => {}); });
+    call.on('close', () => { $('#talkAudio').srcObject = null; });
   });
   peer.on('disconnected', () => {
     if (peer.destroyed || peer !== camPeer) return;
@@ -289,19 +596,24 @@ function connectCamPeer(code){
   });
 }
 
-$('#btnDim').onclick = () => { $('#dim').hidden = false; };
-$('#dim').onclick = () => { $('#dim').hidden = true; };
+$('#btnPreview').onclick = startPreview;
+$('#btnDim').onclick = () => setDim(true);
 $('#btnCamBack').onclick = goHome;
 
-/* ===================== MODO MONITOR ===================== */
+/* =========================================================
+   MODO MONITOR
+   ========================================================= */
 let viewPeer, viewConn, viewCall, viewCode, retryTimer, remoteStream;
-let live = false, lostSince = 0, audioCtx, analyser, meterSrc, lastStatusAt = 0;
+let live = false, lostSince = 0, liveSince = 0, lastStatusAt = 0, camState = {};
+let audioCtx, analyser, meterSrc, soundOn = false;
 const viewStatus = (t,c) => setStatus($('#viewStatus'), t, c);
+const sendCam = msg => { try { if (viewConn?.open) viewConn.send(msg); } catch {} };
 
 function startViewer(code){
   activeMode = 'view'; show('view'); keepAwake();
   viewCode = code;
   history.replaceState(null, '', '?ver');
+  renderQuality();
   viewPeer = new Peer(peerOptions());
   viewPeer.on('open', tryConnect);
   viewPeer.on('call', call => {
@@ -309,9 +621,10 @@ function startViewer(code){
     viewCall = call; prevStats = null;
     call.answer();
     call.on('stream', s => {
-      remoteStream = s; live = true; lostSince = 0;
+      remoteStream = s; live = true; lostSince = 0; liveSince = Date.now();
       const v = $('#remoteVideo'); v.srcObject = s; v.play().catch(() => {});
       viewStatus('En directo', 'ok');
+      $('#liveBadge').hidden = false;
       startMeter();
     });
     call.on('close', () => lost(call));
@@ -343,7 +656,7 @@ function tryConnect(){
   clearTimeout(retryTimer);
   if (!viewPeer || viewPeer.destroyed || live) return;
   if (viewPeer.disconnected) { viewPeer.reconnect(); scheduleRetry(4000); return; }
-  if (!lostSince) viewStatus('Conectando con la cámara…', 'warn');
+  if (!lostSince) viewStatus('Conectando con la cámara… (la primera vez tarda unos segundos)', 'warn');
   try { viewConn?.close(); } catch {}
   const conn = viewConn = viewPeer.connect(PREFIX + viewCode, { reliable: true });
   conn.on('close', () => { if (live && conn === viewConn) lost(viewCall); });
@@ -358,6 +671,7 @@ function lost(call){
   if (!lostSince) lostSince = Date.now();
   try { viewCall?.close(); } catch {}
   viewCall = null;
+  $('#liveBadge').hidden = true;
   viewStatus('⚠️ Señal perdida. Reconectando…', 'err');
   scheduleRetry(2000);
 }
@@ -366,16 +680,76 @@ function lost(call){
 function onCamData(d){
   if (d?.type !== 'status') return;
   lastStatusAt = Date.now();
+  camState = d;
   if (d.battery) {
     const b = d.battery, cls = b.level > 30 ? 'good' : b.level > 15 ? 'mid' : 'bad';
     $('#iBat').innerHTML = `<b class="${cls}">${b.level}%</b> ${b.charging ? '⚡ cargando' : '(sin cargar)'}`;
   } else $('#iBat').textContent = 'No disponible (Safari/iPhone no lo permite)';
   $('#iNet').textContent = d.net || 'No disponible (Safari/iPhone no lo permite)';
-  renderLenses($('#viewLenses'), d.lenses || [], d.lens, id => {
-    try { viewConn?.send({ type: 'lens', id }); } catch {}
-  });
-  $('#viewWrap').classList.toggle('zoom2', !!d.digitalZoom);
+  renderPills($('#viewLenses'), d.lenses || [], d.lens, id => sendCam({ type: 'lens', id }));
+  $('#viewWrap').classList.toggle('zoom2', !!d.digitalZoom && !d.audioOnly);
+  $('#viewAudioOnly').hidden = !d.audioOnly;
+  $('#viewLenses').hidden = !!d.audioOnly;
+  $('#btnAudioOnly').classList.toggle('on', !!d.audioOnly);
+  $('#btnLight').classList.toggle('on', !!d.nightLight);
+  $('#btnLight').textContent = '💡 Luz quitamiedos: ' + (d.nightLight ? 'encendida' : 'apagada');
+  const w = d.white || {};
+  $('#btnWhite').classList.toggle('on', !!w.on);
+  $('#btnWhite').textContent = '🌊 Ruido blanco' + (w.on ? (w.remain ? ` · ${w.remain} min` : ' · sonando') : '');
+  if (w.on && document.activeElement !== $('#whiteVol')) $('#whiteVol').value = w.vol;
+  renderQuality();
 }
+
+function renderQuality(){
+  renderPills($('#qualPills'), Object.entries(QUALITY).map(([id, q]) => ({ id, label: q.label })),
+    camState.quality, q => sendCam({ type: 'quality', q }));
+}
+
+$('#btnAudioOnly').onclick = () => sendCam({ type: 'audioOnly', on: !camState.audioOnly });
+$('#btnLight').onclick = () => sendCam({ type: 'light', on: !camState.nightLight });
+$('#btnWhite').onclick = () => sendCam({ type: 'white', on: !camState.white?.on, vol: +$('#whiteVol').value, min: +$('#whiteMin').value });
+let volT;
+$('#whiteVol').oninput = e => { clearTimeout(volT); volT = setTimeout(() => sendCam({ type: 'whiteVol', vol: +e.target.value }), 150); };
+
+// Hablar al bebé (toca para empezar, toca para terminar)
+let talkCall = null, talkMic = null;
+$('#btnTalk').onclick = async () => {
+  const btn = $('#btnTalk');
+  if (talkCall) {
+    talkCall.close(); talkCall = null;
+    talkMic?.getTracks().forEach(t => t.stop()); talkMic = null;
+    btn.classList.remove('rec'); btn.innerHTML = '<b>🎤</b>Hablar';
+    $('#remoteVideo').muted = !soundOn;
+    return;
+  }
+  if (!live) return;
+  try { talkMic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch { alert('Permite el micrófono para poder hablar al bebé.'); return; }
+  talkCall = viewPeer.call(PREFIX + viewCode, talkMic, { metadata: { talk: true } });
+  $('#remoteVideo').muted = true; // evita que se acople el sonido
+  btn.classList.add('rec'); btn.innerHTML = '<b>🔴</b>Hablando…';
+};
+
+// Foto del momento
+$('#btnSnap').onclick = () => {
+  const v = $('#remoteVideo');
+  if (!v.videoWidth || camState.audioOnly) return;
+  const c = document.createElement('canvas'), w = v.videoWidth, h = v.videoHeight;
+  c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  if ($('#viewWrap').classList.contains('zoom2')) x.drawImage(v, w/4, h/4, w/2, h/2, 0, 0, w, h);
+  else x.drawImage(v, 0, 0, w, h);
+  const name = 'bebe-' + new Date().toISOString().slice(0,19).replace(/[T:]/g, '-') + '.jpg';
+  c.toBlob(async b => {
+    const f = new File([b], name, { type: 'image/jpeg' });
+    if (navigator.canShare?.({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch {} }
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; a.click(); }
+  }, 'image/jpeg', 0.92);
+};
+
+// Pantalla negra en el monitor (sigue escuchando y avisa si hay ruido)
+$('#btnViewDim').onclick = () => { $('#vdim').hidden = false; };
+$('#vdim').onclick = () => { $('#vdim').hidden = true; };
 
 // Calidad de la conexión medida en este móvil
 let prevStats = null;
@@ -400,25 +774,41 @@ async function readStats(){
   const relay = pair && [st.get(pair.localCandidateId), st.get(pair.remoteCandidateId)].some(c => c?.candidateType === 'relay');
   const fps = inb?.framesPerSecond ? Math.round(inb.framesPerSecond) : 0;
   let q = ['Buena', 'good'];
-  if ((rtt ?? 0) > 600 || loss > 5 || fps < 5) q = ['Mala', 'bad'];
-  else if ((rtt ?? 0) > 300 || loss > 1 || fps < 10) q = ['Regular', 'mid'];
+  if ((rtt ?? 0) > 600 || loss > 5 || (!camState.audioOnly && fps < 5)) q = ['Mala', 'bad'];
+  else if ((rtt ?? 0) > 300 || loss > 1) q = ['Regular', 'mid'];
   $('#iQual').innerHTML = `<b class="${q[1]}">${q[0]}</b>` + (loss ? ` · ${loss.toFixed(1)}% pérdidas` : '');
   $('#iRtt').textContent = rtt != null ? rtt + ' ms' : '—';
-  $('#iVid').textContent = `${fps} fps · ${Math.round(kbps)} kbps` + (inb?.frameWidth ? ` · ${inb.frameWidth}×${inb.frameHeight}` : '');
+  $('#iVid').textContent = camState.audioOnly ? 'Apagado (solo audio)' :
+    `${fps} fps · ${Math.round(kbps)} kbps` + (inb?.frameWidth ? ` · ${inb.frameWidth}×${inb.frameHeight}` : '');
   $('#iRoute').textContent = pair ? (relay ? 'Por servidor (TURN)' : 'Directa') : '—';
 }
+
+const hms = ms => { const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor(s/60) % 60, ss = s % 60;
+  return (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(ss).padStart(2,'0'); };
+setInterval(() => { if (live) $('#liveTime').textContent = hms(Date.now() - liveSince); }, 1000);
+setInterval(() => { if (activeMode === 'view') sendCam({ type: 'ping' }); }, 5000); // latido para la cámara
 
 // Aviso si la señal se pierde o la cámara deja de responder
 setInterval(() => {
   if (activeMode !== 'view') return;
   readStats().catch(() => {});
-  if (live && lastStatusAt && Date.now() - lastStatusAt > 15000)
-    viewStatus('⚠️ El móvil del bebé no responde (' + ago(Date.now() - lastStatusAt) + '). ¿Pantalla bloqueada?', 'warn');
-  else if (live) viewStatus('En directo', 'ok');
-  if (live || !lostSince) return;
-  const secs = Math.round((Date.now() - lostSince) / 1000);
-  viewStatus('⚠️ Sin señal desde hace ' + secs + ' s. Reconectando…', 'err');
-  if (secs >= 20 && secs % 10 < 2) { beep(440, 2); navigator.vibrate?.([300,150,300]); }
+  let txt;
+  if (live && lastStatusAt && Date.now() - lastStatusAt > 30000) {
+    txt = '⚠️ El móvil del bebé no responde (' + ago(Date.now() - lastStatusAt) + '). ¿Pantalla bloqueada?';
+    viewStatus(txt, 'warn');
+  } else if (live) {
+    const b = camState.battery;
+    if (b && b.level <= 15 && !b.charging) viewStatus(`En directo · ⚠️ batería de la cámara al ${b.level}%`, 'warn');
+    else viewStatus('En directo', 'ok');
+    txt = 'Escuchando…' + (lastNoiseAt ? ' · último ruido ' + ago(Date.now() - lastNoiseAt) : '');
+  }
+  if (!live && lostSince) {
+    const secs = Math.round((Date.now() - lostSince) / 1000);
+    txt = '⚠️ Sin señal desde hace ' + secs + ' s. Reconectando…';
+    viewStatus(txt, 'err');
+    if (secs >= 20 && secs % 10 < 2) { beep(440, 3); navigator.vibrate?.([300,150,300]); }
+  }
+  if (txt) $('#vdimText').textContent = txt;
 }, 2000);
 
 function beep(freq = 880, times = 2){
@@ -437,11 +827,12 @@ function beep(freq = 880, times = 2){
 
 $('#btnSound').onclick = async () => {
   const v = $('#remoteVideo');
-  v.muted = false; v.play().catch(() => {});
+  soundOn = true;
+  v.muted = !!talkCall; v.play().catch(() => {});
   audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
   await audioCtx.resume();
   $('#btnSound').hidden = true; $('#soundCard').hidden = false;
-  startMeter();
+  startMeter(); drawSpark();
 };
 
 function startMeter(){
@@ -454,15 +845,36 @@ function startMeter(){
 
 const thr = $('#threshold');
 thr.value = store.get('threshold') || 60;
-const updMark = () => { $('#meterMark').style.left = (100 - thr.value) + '%'; store.set('threshold', thr.value); };
-thr.oninput = updMark; updMark();
-for (const id of ['optBeep','optVibe']) {
+const updMark = () => { $('#meterMark').style.left = (100 - thr.value) + '%'; store.set('threshold', thr.value); drawSpark(); };
+thr.oninput = updMark;
+for (const id of ['optBeep','optVibe','optAutoVideo']) {
   const el = $('#'+id);
   el.checked = store.get(id) !== '0';
   el.onchange = () => store.set(id, el.checked ? '1' : '0');
 }
 
-let loud = 0, lastAlarm = 0, lastNoiseAt = 0, dotTimer;
+// Historial de ruido (30 min, un punto cada 10 s)
+const hist = []; let bucketMax = 0, bucketT = Date.now();
+function drawSpark(){
+  const c = $('#spark'); if (!c || $('#soundCard').hidden) return;
+  const dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  if (!W) return;
+  c.width = W * dpr; c.height = H * dpr;
+  const x = c.getContext('2d'); x.scale(dpr, dpr);
+  const lim = 100 - thr.value, N = 180, bw = W / N;
+  for (let i = 0; i < hist.length; i++) {
+    const v = hist[hist.length - 1 - i], bh = Math.max(1, v / 100 * (H - 4));
+    x.fillStyle = v > lim ? '#f87171' : '#3b5b8a';
+    x.fillRect(W - (i + 1) * bw, H - bh, Math.max(1, bw - 0.5), bh);
+  }
+  const ly = H - lim / 100 * (H - 4);
+  x.strokeStyle = 'rgba(255,255,255,.5)'; x.setLineDash([4, 4]);
+  x.beginPath(); x.moveTo(0, ly); x.lineTo(W, ly); x.stroke();
+}
+window.addEventListener('resize', drawSpark);
+updMark();
+
+let loud = 0, lastAlarm = 0, lastNoiseAt = 0, dotTimer, vdimTimer;
 const buf = new Float32Array(1024);
 setInterval(() => {
   if (lastNoiseAt) $('#lastNoise').textContent = 'Último ruido: ' + ago(Date.now() - lastNoiseAt);
@@ -472,9 +884,15 @@ setInterval(() => {
   const db = 20 * Math.log10(Math.sqrt(sum / buf.length) || 1e-8);
   const level = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
   $('#meterBar').style.width = level + '%';
+  $('#vdimLvl').style.width = level + '%';
+  bucketMax = Math.max(bucketMax, level);
+  if (Date.now() - bucketT >= 10000) {
+    hist.push(bucketMax); if (hist.length > 180) hist.shift();
+    bucketMax = 0; bucketT = Date.now(); drawSpark();
+  }
   const limit = 100 - thr.value; // más sensibilidad = umbral más bajo
   loud = level > limit ? loud + 1 : 0;
-  if (loud >= 3) {
+  if (loud >= 3 && !talkCall) {
     lastNoiseAt = Date.now();
     // Punto rojo sobre la imagen mientras haya ruido (y 4 s después)
     $('#noiseDot').hidden = $('#noiseTag').hidden = false;
@@ -484,7 +902,10 @@ setInterval(() => {
       lastAlarm = Date.now();
       if ($('#optBeep').checked) beep(880, 2);
       if ($('#optVibe').checked) navigator.vibrate?.([400,200,400]);
+      if (camState.audioOnly && $('#optAutoVideo').checked) sendCam({ type: 'audioOnly', on: false });
       const s = $('#view'); s.classList.remove('alarm'); void s.offsetWidth; s.classList.add('alarm');
+      const vd = $('#vdim'); vd.classList.add('alert');
+      clearTimeout(vdimTimer); vdimTimer = setTimeout(() => vd.classList.remove('alert'), 4000);
     }
   }
 }, 200);
